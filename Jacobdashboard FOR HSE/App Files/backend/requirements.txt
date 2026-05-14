@@ -1,0 +1,13 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+openpyxl==3.1.5
+sqlalchemy>=2.0
+alembic
+python-multipart
+pdfplumber
+pywebview==5.2
+pyinstaller==6.11.0
+QtPy==2.4.2
+PyQt5==5.15.11
+PyQtWebEngine==5.15.7

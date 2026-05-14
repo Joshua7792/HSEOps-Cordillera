@@ -1,0 +1,13 @@
+.venv/
+.venv-linux/
+.venv-windows/
+__pycache__/
+*.pyc
+backend/data/
+build/
+dist/
+frontend/dist/
+frontend/node_modules/
+*-dev.log
+*-dev.err.log
+.codex
