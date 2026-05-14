@@ -1,0 +1,67 @@
+<h2>Design — Section 3: PDF Import Flow + CRUD</h2>
+<p class="subtitle">How a PDF goes from your folder into the dashboard, and how you edit records after.</p>
+
+<div class="section">
+  <p class="label">Import flow — step by step</p>
+  <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.75rem;">
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+      <div style="min-width:28px;height:28px;background:#3b82f6;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">1</div>
+      <div style="background:var(--surface-2,#f1f5f9);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.85rem;flex:1;">
+        <strong>You drag one or more Anejo 3 PDFs</strong> onto the Import page (or click to browse). Multiple files upload in one go.
+      </div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+      <div style="min-width:28px;height:28px;background:#3b82f6;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">2</div>
+      <div style="background:var(--surface-2,#f1f5f9);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.85rem;flex:1;">
+        <strong>POST /api/import/pdf</strong> receives the file. The existing <code>import_pdf.py</code> parser runs — same Spanish-locale date logic, same name normalization, same Anejo 3 field extraction. Nothing changes in the parser.
+      </div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+      <div style="min-width:28px;height:28px;background:#3b82f6;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">3</div>
+      <div style="background:var(--surface-2,#f1f5f9);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.85rem;flex:1;">
+        <strong>Results write to SQLite</strong> — new workers/contractors created, cert dates upserted (newest date wins). An ImportBatch record is saved with the full warning list.
+      </div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+      <div style="min-width:28px;height:28px;background:#3b82f6;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">4</div>
+      <div style="background:var(--surface-2,#f1f5f9);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.85rem;flex:1;">
+        <strong>Response returns immediately:</strong> records added, records updated, records skipped, and every warning (e.g. "Worker 'Juan Rosario' matched to contractor by fuzzy name — verify", "Date field missing for OSHA 10").
+      </div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+      <div style="min-width:28px;height:28px;background:#22c55e;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">5</div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:0.625rem 0.875rem;font-size:0.85rem;flex:1;">
+        <strong>Dashboard updates instantly.</strong> Navigate to Overview, Heatmap, or Action Center — data is already there. No Refresh button, no file-lock wait.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.5rem;">
+  <p class="label">Warning area — what it looks like</p>
+  <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:1rem;margin-top:0.5rem;font-size:0.85rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
+      <strong>⚠️ 3 items need your review</strong>
+      <span style="font-size:0.78rem;color:#92400e;">From: Anejo3_Acme_May2026.pdf</span>
+    </div>
+    <ul style="margin:0;padding-left:1.25rem;line-height:1.8;color:#78350f;">
+      <li>Worker "Carlos M. Soto" — OSHA 10 date field was blank. No date added. <strong>[Fix manually]</strong></li>
+      <li>Contractor "Acme Const." matched to "Acme Construction" by fuzzy match — <strong>[Confirm or reject]</strong></li>
+      <li>Worker "Pedro Vega" not found in Workers list — added as new. <strong>[Review]</strong></li>
+    </ul>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.5rem;">
+  <p class="label">CRUD endpoints added</p>
+  <div style="font-family:monospace;font-size:0.8rem;line-height:2;color:var(--text-1,#0f172a);background:var(--surface-2,#f1f5f9);padding:0.875rem 1rem;border-radius:8px;margin-top:0.5rem;">
+    PUT  /api/workers/{id}        — edit name, status, email, job title, etc.<br>
+    PUT  /api/contractors/{id}    — edit contact, specialty, notes<br>
+    POST /api/contractors         — add contractor manually before first PDF<br>
+    PUT  /api/certs/{id}          — edit cert category or validity<br>
+    POST /api/certs               — add cert type manually<br>
+    PUT  /api/cert-entries/{id}   — fix a wrong date<br>
+    DELETE /api/cert-entries/{id} — remove a cert entry entirely<br>
+    GET  /api/import/history      — list of all past PDF imports + warnings
+  </div>
+</div>

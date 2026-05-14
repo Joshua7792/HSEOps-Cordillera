@@ -1,0 +1,80 @@
+<h2>Design — Section 4: Frontend Changes</h2>
+<p class="subtitle">What gets added, what gets modernized, and what stays identical.</p>
+
+<div class="section">
+  <p class="label">Navigation — new items added</p>
+  <div class="mock-nav" style="margin-top:0.5rem;display:flex;gap:1.5rem;align-items:center;font-size:0.85rem;">
+    <span>📊 Overview</span>
+    <span>🚨 Action Center</span>
+    <span>🏢 Contractors</span>
+    <span>👷 Workforce</span>
+    <span>🎓 Cert Coverage</span>
+    <span>🗺 Heatmap</span>
+    <span style="color:#f59e0b;font-weight:700;">📂 Import PDF ← new</span>
+    <span style="margin-left:auto;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:999px;font-size:0.75rem;font-weight:700;">⚠ 3 warnings</span>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">New pages</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-left:3px solid #f59e0b;">
+      <strong style="display:block;margin-bottom:0.25rem;">📂 Import PDF page</strong>
+      <ul style="font-size:0.82rem;margin:0;padding-left:1rem;line-height:1.8;color:var(--text-2,#64748b);">
+        <li>Drag-and-drop zone (multiple files)</li>
+        <li>Upload progress indicator per file</li>
+        <li>Result card: added / updated / skipped counts</li>
+        <li>Warning cards with "Fix manually" links</li>
+        <li>Import history list (past batches)</li>
+      </ul>
+    </div>
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-left:3px solid #64748b;">
+      <strong style="display:block;margin-bottom:0.25rem;">⚙️ Settings page (lightweight)</strong>
+      <ul style="font-size:0.82rem;margin:0;padding-left:1rem;line-height:1.8;color:var(--text-2,#64748b);">
+        <li>Database path info</li>
+        <li>One-time migration trigger (Excel → SQLite)</li>
+        <li>Language toggle (EN/ES, already exists)</li>
+        <li>Theme toggle (already exists)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">Edit modals added to existing pages</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:0.75rem;font-size:0.82rem;">
+      <strong>Workers page</strong><br>
+      <span style="color:var(--text-2,#64748b);">Edit icon on each row → modal to change name, status, job title, email, phone, notes</span>
+    </div>
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:0.75rem;font-size:0.82rem;">
+      <strong>Contractors page</strong><br>
+      <span style="color:var(--text-2,#64748b);">Edit icon on each card → modal for contact, specialty, notes. + "Add contractor" button</span>
+    </div>
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:0.75rem;font-size:0.82rem;">
+      <strong>Worker detail (expanded row)</strong><br>
+      <span style="color:var(--text-2,#64748b);">Each cert date has a pencil icon → inline edit or delete that single CertEntry</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">What doesn't change in the frontend</p>
+  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:0.875rem 1rem;font-size:0.85rem;margin-top:0.5rem;">
+    <ul style="margin:0;padding-left:1.25rem;line-height:1.9;color:#166534;">
+      <li>All 6 existing pages — same layout, same data, same TypeScript types</li>
+      <li>DashboardContext — still fetches from <code>/api/excel/dashboard</code> (same URL)</li>
+      <li>Status color logic — green/yellow/orange/red, same thresholds</li>
+      <li>i18n EN/ES translations — no new strings needed for core pages</li>
+      <li>Heatmap, Action Center filters, KPI strip — all identical</li>
+      <li>Theme (light/dark) — unchanged</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">One UX improvement: replace the Refresh button</p>
+  <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:0.875rem 1rem;font-size:0.85rem;margin-top:0.5rem;">
+    The current Refresh bar exists because Excel could change on disk at any time. With SQLite, data only changes when <em>you</em> do something (import or edit). The RefreshBar stays but becomes a lightweight <strong>"Last updated X minutes ago"</strong> indicator with a manual refresh option — no longer a required step before trusting the data.
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<h2>Three approaches — which fits best?</h2>
+<p class="subtitle">All three keep your launch scripts and PDF parsing logic untouched. The difference is how the database layer is built underneath.</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Thin adapter — minimal change</h3>
+      <p>Add a <code>db_reader.py</code> beside <code>excel_reader.py</code>. It returns the exact same data structures the frontend already expects, but reads from SQLite instead of .xlsx. The rest of the backend is untouched.</p>
+      <div class="pros-cons" style="margin-top:0.75rem;">
+        <div class="pros"><h4>Pros</h4><ul><li>Least risk of breaking things</li><li>Frontend needs zero changes</li><li>Rollback is easy</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Excel-shaped data model lives on in DB</li><li>Harder to add CRUD later</li><li>Duplicates some logic</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>SQLAlchemy models — clean DB layer ⭐ Recommended</h3>
+      <p>Define proper ORM models: <code>Worker</code>, <code>Contractor</code>, <code>Cert</code>, <code>CertEntry</code>. Replace only <code>excel_reader.py</code> with DB queries. PDF import writes to these models. Launch scripts, API routes, and frontend stay the same.</p>
+      <div class="pros-cons" style="margin-top:0.75rem;">
+        <div class="pros"><h4>Pros</h4><ul><li>Clean relational model — easy CRUD</li><li>Auto-migrations with Alembic</li><li>Edit records trivially</li><li>Same API responses — frontend unchanged</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More upfront work than A</li><li>Adds SQLAlchemy dependency</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Raw SQLite — no ORM</h3>
+      <p>Use Python's built-in <code>sqlite3</code> module directly. Write raw SQL queries everywhere. No new dependencies.</p>
+      <div class="pros-cons" style="margin-top:0.75rem;">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero new dependencies</li><li>Full control over every query</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Lots of boilerplate SQL strings</li><li>Harder to maintain and extend</li><li>CRUD endpoints become verbose</li><li>No migration tooling</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:1.5rem;padding:1rem;background:var(--surface-2,#f1f5f9);border-radius:8px;border-left:3px solid #3b82f6;">
+  <p class="label">Why B is the right pick</p>
+  <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--text-2,#64748b)">You want full CRUD + import + warnings. SQLAlchemy gives you all of that with clean model definitions. The launch scripts stay identical — they just start uvicorn the same way they always have. Only <code>excel_reader.py</code> and <code>workbook_sync.py</code> get replaced.</p>
+</div>

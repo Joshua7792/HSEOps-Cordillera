@@ -1,0 +1,77 @@
+<h2>Design — Section 1: Architecture</h2>
+<p class="subtitle">What changes, what stays exactly as-is, and how the pieces connect.</p>
+
+<div class="section">
+  <p class="label">🟢 Stays completely untouched</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>Linux/ &amp; Windows/ scripts</strong><br>
+      <span style="color:#166534">setup, start-live, start-desktop — identical</span>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>PDF parsing logic</strong><br>
+      <span style="color:#166534">import_pdf.py — Spanish dates, name matching, Anejo 3 format</span>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>FastAPI app structure</strong><br>
+      <span style="color:#166534">main.py, CORS config, desktop launcher, PyInstaller build</span>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>React routing &amp; shell</strong><br>
+      <span style="color:#166534">6 pages stay, ShellLayout, ThemeContext, i18n EN/ES</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">🔵 Replaced (Excel → SQLite)</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>excel_reader.py</strong> → <strong>db_reader.py</strong><br>
+      <span style="color:#1d4ed8">Same data structures returned, reads SQLite instead of .xlsx</span>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>workbook_sync.py</strong> → <strong>removed</strong><br>
+      <span style="color:#1d4ed8">No longer needed — DB handles structure automatically</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">🟠 New additions</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>SQLAlchemy models</strong><br>
+      <span style="color:#9a3412">Worker, Contractor, Cert, CertEntry, ImportBatch</span>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>CRUD API endpoints</strong><br>
+      <span style="color:#9a3412">Edit/delete workers, contractors, cert dates from the UI</span>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>PDF upload endpoint</strong><br>
+      <span style="color:#9a3412">POST /api/import/pdf — runs parser, writes to DB, returns warnings</span>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>Import page (frontend)</strong><br>
+      <span style="color:#9a3412">Drag &amp; drop PDFs, see import history, review warnings</span>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>One-time migration</strong><br>
+      <span style="color:#9a3412">First launch: reads real Excel workbook → writes to SQLite</span>
+    </div>
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:6px;padding:0.75rem;font-size:0.85rem;">
+      <strong>Modernized dashboard</strong><br>
+      <span style="color:#9a3412">Better visuals, live data (no Refresh button), edit modals</span>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.5rem;padding:0.875rem 1rem;background:var(--surface-2,#f1f5f9);border-radius:8px;">
+  <p class="label">Data flow after the change</p>
+  <div style="font-family:monospace;font-size:0.82rem;color:var(--text-1,#0f172a);margin-top:0.5rem;line-height:1.8;">
+    Anejo 3 PDF → Import page → POST /api/import/pdf → import_pdf parser → SQLite DB<br>
+    SQLite DB → db_reader.py → same JSON API → React dashboard (live, no refresh needed)<br>
+    Edit modal → PUT /api/workers/{id} → SQLite → dashboard updates immediately
+  </div>
+</div>

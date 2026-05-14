@@ -1,0 +1,8 @@
+{"type":"server-started","port":63214,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:63214","screen_dir":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content","state_dir":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/state"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/welcome.html"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/approaches.html"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/architecture.html"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/schema.html"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/import-flow.html"}
+{"type":"screen-added","file":"/home/joshua-santiago/Desktop/HSEOps-Cordillera/.superpowers/brainstorm/240641-1778702957/content/frontend.html"}
+{"type":"server-stopped","reason":"idle timeout"}

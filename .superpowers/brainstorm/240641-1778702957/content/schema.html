@@ -1,0 +1,62 @@
+<h2>Design — Section 2: Database Schema</h2>
+<p class="subtitle">Five SQLAlchemy models. Every field maps directly to what the current Excel sheets store today.</p>
+
+<div class="section">
+  <p class="label">Models overview</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem;">
+
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-top:3px solid #3b82f6;">
+      <strong style="font-size:0.95rem;">Contractor</strong>
+      <div style="font-family:monospace;font-size:0.78rem;margin-top:0.5rem;line-height:1.7;color:var(--text-2,#64748b);">
+        id · name (unique) · primary_contact<br>specialty · notes<br>created_at · updated_at
+      </div>
+      <div style="font-size:0.78rem;margin-top:0.5rem;color:#2563eb;">← maps from: Contractors sheet</div>
+    </div>
+
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-top:3px solid #8b5cf6;">
+      <strong style="font-size:0.95rem;">Worker</strong>
+      <div style="font-family:monospace;font-size:0.78rem;margin-top:0.5rem;line-height:1.7;color:var(--text-2,#64748b);">
+        id · name · contractor_id (FK)<br>job_title · status · employee_code<br>hire_date · email · phone · notes<br>created_at · updated_at
+      </div>
+      <div style="font-size:0.78rem;margin-top:0.5rem;color:#7c3aed;">← maps from: Workers sheet</div>
+    </div>
+
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-top:3px solid #10b981;">
+      <strong style="font-size:0.95rem;">Cert</strong>
+      <div style="font-family:monospace;font-size:0.78rem;margin-top:0.5rem;line-height:1.7;color:var(--text-2,#64748b);">
+        id · name (unique) · category<br>validity_years · notes
+      </div>
+      <div style="font-size:0.78rem;margin-top:0.5rem;color:#059669;">← maps from: Certifications sheet</div>
+    </div>
+
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-top:3px solid #f59e0b;">
+      <strong style="font-size:0.95rem;">CertEntry</strong>
+      <div style="font-family:monospace;font-size:0.78rem;margin-top:0.5rem;line-height:1.7;color:var(--text-2,#64748b);">
+        id · worker_id (FK) · cert_id (FK)<br>completed_on · source<br>import_batch_id (FK, nullable)<br>created_at · updated_at
+      </div>
+      <div style="font-size:0.78rem;margin-top:0.5rem;color:#d97706;">← maps from: Tracker sheet cells</div>
+      <div style="font-size:0.78rem;color:#92400e;margin-top:0.25rem;">UNIQUE(worker_id, cert_id) — one record per worker+cert, newest date wins</div>
+    </div>
+
+    <div style="background:var(--surface-2,#f1f5f9);border-radius:8px;padding:1rem;border-top:3px solid #ef4444;grid-column:span 2;">
+      <strong style="font-size:0.95rem;">ImportBatch</strong>
+      <div style="font-family:monospace;font-size:0.78rem;margin-top:0.5rem;line-height:1.7;color:var(--text-2,#64748b);">
+        id · filename · imported_at · status (success | partial | failed)<br>
+        warnings (JSON list) · records_added · records_updated · records_skipped
+      </div>
+      <div style="font-size:0.78rem;margin-top:0.5rem;color:#dc2626;">← new: tracks every PDF import with its warnings</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem;">
+  <p class="label">Key design decisions</p>
+  <ul style="font-size:0.875rem;line-height:1.9;margin:0.5rem 0 0;padding-left:1.25rem;color:var(--text-1,#0f172a);">
+    <li><strong>source field on CertEntry</strong> — values: <code>pdf_import</code>, <code>manual</code>, <code>excel_migration</code>. You can always see where a date came from.</li>
+    <li><strong>Newest date wins</strong> — when a PDF import brings a date for a cert a worker already has, it only overwrites if the new date is more recent. Existing good data is never silently deleted.</li>
+    <li><strong>Cascade deletes</strong> — deleting a Worker removes their CertEntries. Deleting a Contractor doesn't auto-delete Workers (safety: you'd need to reassign first).</li>
+    <li><strong>Status computed at runtime</strong> — green/yellow/red is never stored in the DB. It's calculated from <code>completed_on</code> + today's date, exactly like today's <code>excel_reader.py</code> does it. No staleness risk.</li>
+    <li><strong>Alembic for migrations</strong> — schema changes are versioned. If we add a field later, <code>alembic upgrade head</code> handles it without touching your data.</li>
+  </ul>
+</div>
