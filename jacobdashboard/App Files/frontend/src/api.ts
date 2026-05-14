@@ -4,7 +4,7 @@
 // the frontend on its own port and proxying to a separately-running backend).
 // In the packaged desktop build the frontend is served from the same origin
 // as the API, so VITE_API_BASE stays empty and requests are same-origin.
-import type { ExcelDashboard, ExcelHealth, ExcelWorker, ImportBatch } from './types'
+import type { CrudContractor, CrudWorker, CrudCert, ExcelDashboard, ExcelHealth, ExcelWorker, ImportBatch } from './types'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -41,6 +41,13 @@ export const api = {
     ),
 
   // CRUD — workers
+  listWorkers: () => request<CrudWorker[]>('/api/workers'),
+  createWorker: (body: Record<string, unknown>) =>
+    request<{ id: number; name: string }>('/api/workers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
   updateWorker: (id: number, body: Record<string, unknown>) =>
     request<{ id: number; name: string }>(`/api/workers/${id}`, {
       method: 'PUT',
@@ -51,6 +58,7 @@ export const api = {
     request<void>(`/api/workers/${id}`, { method: 'DELETE' }),
 
   // CRUD — contractors
+  listContractors: () => request<CrudContractor[]>('/api/contractors'),
   createContractor: (body: Record<string, unknown>) =>
     request<{ id: number; name: string }>('/api/contractors', {
       method: 'POST',
@@ -67,6 +75,7 @@ export const api = {
     request<void>(`/api/contractors/${id}`, { method: 'DELETE' }),
 
   // CRUD — certs
+  listCerts: () => request<CrudCert[]>('/api/certs'),
   createCert: (body: Record<string, unknown>) =>
     request<{ id: number; name: string }>('/api/certs', {
       method: 'POST',

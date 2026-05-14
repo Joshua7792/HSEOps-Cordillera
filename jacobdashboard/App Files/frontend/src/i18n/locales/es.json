@@ -205,5 +205,30 @@
   },
   "pagination": {
     "label": "Páginas de la tabla"
+  },
+  "crud": {
+    "add_worker": "Agregar trabajador",
+    "add_contractor": "Agregar contratista",
+    "add_cert": "Agregar certificación",
+    "delete_worker_title": "¿Eliminar trabajador?",
+    "delete_worker_desc": "Esto eliminará permanentemente al trabajador y todos sus registros de certificación. Esta acción no se puede deshacer.",
+    "delete_contractor_title": "¿Eliminar contratista?",
+    "delete_contractor_desc": "Esto eliminará permanentemente al contratista. Primero debe reasignar o eliminar todos sus trabajadores.",
+    "delete_cert_title": "¿Eliminar certificación?",
+    "delete_cert_desc": "Esto eliminará permanentemente el tipo de certificación y todos los registros relacionados.",
+    "name_label": "Nombre",
+    "contractor_label": "Contratista",
+    "job_title_label": "Cargo",
+    "status_label": "Estado",
+    "specialty_label": "Especialidad",
+    "primary_contact_label": "Contacto principal",
+    "category_label": "Categoría",
+    "validity_years_label": "Vigencia (años)",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "status_active": "Activo",
+    "status_inactive": "Inactivo",
+    "status_onboarding": "En incorporación"
   }
 }

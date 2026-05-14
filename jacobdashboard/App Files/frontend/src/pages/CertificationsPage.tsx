@@ -1,7 +1,12 @@
-import { Search } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import * as Dialog from '@radix-ui/react-dialog'
+import { Plus, Search, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
+import { api } from '../api'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { PageShell } from '../components/PageShell'
 import { StatusPill, StatusStackedBar } from '../components/StatusPill'
 import { useDashboard } from '../context/DashboardContext'
@@ -10,6 +15,8 @@ import { formatDate, relativeDays } from '../lib/format'
 type SortMode = 'coverage-asc' | 'coverage-desc' | 'name' | 'urgent-desc'
 type WorkerStatusFilter = 'active' | 'inactive' | 'onboarding' | 'all'
 const CURRENT_ROWS_PER_PAGE = 15
+const INPUT = 'w-full rounded border border-[#30363d] bg-[#0d1117] px-3 py-2 text-sm text-[#e6edf3] placeholder-[#484f58] focus:border-[#f59e0b] focus:outline-none'
+const LABEL = 'block text-xs text-[#8b949e] mb-1'
 
 type CurrentCertRow = {
   contractor: string
@@ -37,8 +44,26 @@ function workerStatusLabel(status: string | undefined, t: ReturnType<typeof useT
 
 export function CertificationsPage() {
   const { t, i18n } = useTranslation()
-  const { data } = useDashboard()
+  const { data, reload } = useDashboard()
+  const queryClient = useQueryClient()
   const [sort, setSort] = useState<SortMode>('coverage-asc')
+
+  // Add cert dialog
+  const [addOpen, setAddOpen] = useState(false)
+  const [addName, setAddName] = useState('')
+  const [addCategory, setAddCategory] = useState('')
+  const [addValidity, setAddValidity] = useState('1')
+  const [addSaving, setAddSaving] = useState(false)
+
+  // Delete confirm
+  const [deleteCertName, setDeleteCertName] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const { data: crudCerts = [] } = useQuery({
+    queryKey: ['crud-certs'],
+    queryFn: api.listCerts,
+    staleTime: 60_000,
+  })
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [contractorFilter, setContractorFilter] = useState('all')
   const [workerStatusFilter, setWorkerStatusFilter] = useState<WorkerStatusFilter>('active')
@@ -142,13 +167,60 @@ export function CertificationsPage() {
     return copy
   }, [certs, sort, categoryFilter])
 
+  async function handleAddCert() {
+    if (!addName.trim()) return
+    setAddSaving(true)
+    try {
+      await api.createCert({
+        name: addName.trim(),
+        category: addCategory.trim() || null,
+        validity_years: addValidity ? Number(addValidity) : 1,
+      })
+      toast.success(`Certification "${addName.trim()}" added`)
+      setAddOpen(false)
+      setAddName('')
+      setAddCategory('')
+      setAddValidity('1')
+      await Promise.all([reload(), queryClient.invalidateQueries({ queryKey: ['crud-certs'] })])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add certification')
+    } finally {
+      setAddSaving(false)
+    }
+  }
+
+  async function handleDeleteCert() {
+    if (!deleteCertName) return
+    const match = crudCerts.find((c) => c.name === deleteCertName)
+    if (!match) { toast.error('Certification not found'); return }
+    setDeleteLoading(true)
+    try {
+      await api.deleteCert(match.id)
+      toast.success(`Certification "${deleteCertName}" deleted`)
+      setDeleteCertName(null)
+      await Promise.all([reload(), queryClient.invalidateQueries({ queryKey: ['crud-certs'] })])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete certification')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   return (
+    <>
     <PageShell
       eyebrow={t('certifications.eyebrow')}
       title={t('certifications.title')}
       description={t('certifications.description')}
       actions={
         <>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-1.5 rounded border border-[#30363d] bg-[#21262d] px-3 py-1.5 text-sm text-[#e6edf3] hover:bg-[#30363d]"
+          >
+            <Plus size={14} />
+            {t('crud.add_cert')}
+          </button>
           <select
             aria-label={t('filter.by_category')}
             value={categoryFilter}
@@ -390,6 +462,7 @@ export function CertificationsPage() {
                     <th className="border-b border-[#30363d] bg-[#161b22] px-3 py-2 text-left text-xs uppercase tracking-wider text-[#8b949e]">
                       {t('certifications.col_coverage')}
                     </th>
+                    <th className="border-b border-[#30363d] bg-[#161b22] px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -424,6 +497,15 @@ export function CertificationsPage() {
                       <td className="border-b border-[#30363d] px-3 py-3">
                         <strong className="text-[#e6edf3]">{c.coverage_pct.toFixed(0)}%</strong>
                       </td>
+                      <td className="border-b border-[#30363d] px-3 py-3">
+                        <button
+                          onClick={() => setDeleteCertName(c.cert_name)}
+                          title="Delete certification"
+                          className="rounded p-1.5 text-[#8b949e] hover:bg-[#ef4444]/10 hover:text-[#ef4444]"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -433,5 +515,78 @@ export function CertificationsPage() {
         </>
       )}
     </PageShell>
+
+    {/* Add Cert dialog */}
+    <Dialog.Root open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[#30363d] bg-[#161b22] p-6 shadow-xl">
+          <div className="mb-5 flex items-center justify-between">
+            <Dialog.Title className="text-base font-semibold text-[#e6edf3]">
+              {t('crud.add_cert')}
+            </Dialog.Title>
+            <Dialog.Close className="rounded p-1 text-[#8b949e] hover:text-[#e6edf3]">
+              <X size={16} />
+            </Dialog.Close>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className={LABEL}>{t('crud.name_label')} *</label>
+              <input
+                className={INPUT}
+                value={addName}
+                onChange={(e) => setAddName(e.target.value)}
+                placeholder="e.g. First Aid"
+              />
+            </div>
+            <div>
+              <label className={LABEL}>{t('crud.category_label')}</label>
+              <input
+                className={INPUT}
+                value={addCategory}
+                onChange={(e) => setAddCategory(e.target.value)}
+                placeholder="e.g. Safety, Technical"
+              />
+            </div>
+            <div>
+              <label className={LABEL}>{t('crud.validity_years_label')}</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                className={INPUT}
+                value={addValidity}
+                onChange={(e) => setAddValidity(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <Dialog.Close asChild>
+              <button className="rounded border border-[#30363d] bg-[#21262d] px-4 py-2 text-sm text-[#e6edf3] hover:bg-[#30363d]">
+                {t('crud.cancel')}
+              </button>
+            </Dialog.Close>
+            <button
+              onClick={handleAddCert}
+              disabled={addSaving || !addName.trim()}
+              className="rounded bg-[#f59e0b] px-4 py-2 text-sm font-medium text-[#0d1117] hover:bg-[#d97706] disabled:opacity-50"
+            >
+              {addSaving ? t('crud.saving') : t('crud.save')}
+            </button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+
+    {/* Delete confirm */}
+    <ConfirmDialog
+      open={deleteCertName !== null}
+      onOpenChange={(open) => { if (!open) setDeleteCertName(null) }}
+      title={t('crud.delete_cert_title')}
+      description={`${t('crud.delete_cert_desc')} Cert: "${deleteCertName}"`}
+      onConfirm={handleDeleteCert}
+      loading={deleteLoading}
+    />
+    </>
   )
 }

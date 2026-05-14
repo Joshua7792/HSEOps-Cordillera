@@ -205,5 +205,30 @@
   },
   "pagination": {
     "label": "Table pages"
+  },
+  "crud": {
+    "add_worker": "Add Worker",
+    "add_contractor": "Add Contractor",
+    "add_cert": "Add Certification",
+    "delete_worker_title": "Delete worker?",
+    "delete_worker_desc": "This will permanently remove the worker and all their certification records. This cannot be undone.",
+    "delete_contractor_title": "Delete contractor?",
+    "delete_contractor_desc": "This will permanently remove the contractor. You must reassign or delete all workers first.",
+    "delete_cert_title": "Delete certification?",
+    "delete_cert_desc": "This will permanently remove the certification type and all related records.",
+    "name_label": "Name",
+    "contractor_label": "Contractor",
+    "job_title_label": "Job Title",
+    "status_label": "Status",
+    "specialty_label": "Specialty",
+    "primary_contact_label": "Primary Contact",
+    "category_label": "Category",
+    "validity_years_label": "Validity (years)",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "status_onboarding": "Onboarding"
   }
 }

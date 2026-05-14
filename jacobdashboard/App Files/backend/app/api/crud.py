@@ -1,11 +1,15 @@
 """CRUD endpoints — create, update, and delete contractors, workers, certs, and cert entries.
 
 Endpoints:
+  GET    /api/contractors
   POST   /api/contractors
   PUT    /api/contractors/{id}
   DELETE /api/contractors/{id}   (409 if contractor has active workers)
+  GET    /api/workers
+  POST   /api/workers
   PUT    /api/workers/{id}
   DELETE /api/workers/{id}
+  GET    /api/certs
   POST   /api/certs
   PUT    /api/certs/{id}
   DELETE /api/certs/{id}
@@ -40,6 +44,17 @@ class ContractorUpdate(BaseModel):
     name: Optional[str] = None
     primary_contact: Optional[str] = None
     specialty: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class WorkerCreate(BaseModel):
+    name: str
+    contractor_id: int
+    job_title: Optional[str] = None
+    status: Optional[str] = "active"
+    employee_code: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -84,6 +99,15 @@ def _apply_updates(obj, updates: dict) -> None:
 
 # ── Contractor endpoints ─────────────────────────────────────────────────────
 
+@router.get("/contractors")
+def list_contractors(db: Session = Depends(get_db)) -> list:
+    rows = db.query(models.Contractor).order_by(models.Contractor.name).all()
+    return [
+        {"id": c.id, "name": c.name, "specialty": c.specialty, "primary_contact": c.primary_contact}
+        for c in rows
+    ]
+
+
 @router.post("/contractors", status_code=201)
 def create_contractor(body: ContractorCreate, db: Session = Depends(get_db)) -> dict:
     existing = db.query(models.Contractor).filter_by(name=body.name).first()
@@ -120,7 +144,7 @@ def update_contractor(
     return {"id": contractor.id, "name": contractor.name}
 
 
-@router.delete("/contractors/{contractor_id}", status_code=204)
+@router.delete("/contractors/{contractor_id}", status_code=204, response_model=None)
 def delete_contractor(contractor_id: int, db: Session = Depends(get_db)) -> None:
     contractor = db.get(models.Contractor, contractor_id)
     if not contractor:
@@ -141,6 +165,39 @@ def delete_contractor(contractor_id: int, db: Session = Depends(get_db)) -> None
 
 # ── Worker endpoints ─────────────────────────────────────────────────────────
 
+@router.get("/workers")
+def list_workers(db: Session = Depends(get_db)) -> list:
+    rows = (
+        db.query(models.Worker, models.Contractor.name.label("contractor_name"))
+        .join(models.Contractor, models.Worker.contractor_id == models.Contractor.id)
+        .order_by(models.Worker.name)
+        .all()
+    )
+    return [
+        {
+            "id": w.id,
+            "name": w.name,
+            "contractor_id": w.contractor_id,
+            "contractor_name": contractor_name,
+            "job_title": w.job_title,
+            "status": w.status,
+        }
+        for w, contractor_name in rows
+    ]
+
+
+@router.post("/workers", status_code=201)
+def create_worker(body: WorkerCreate, db: Session = Depends(get_db)) -> dict:
+    contractor = db.get(models.Contractor, body.contractor_id)
+    if not contractor:
+        raise HTTPException(status_code=404, detail="Contractor not found")
+    worker = models.Worker(**body.model_dump())
+    db.add(worker)
+    db.commit()
+    db.refresh(worker)
+    return {"id": worker.id, "name": worker.name}
+
+
 @router.put("/workers/{worker_id}")
 def update_worker(
     worker_id: int,
@@ -156,7 +213,7 @@ def update_worker(
     return {"id": worker.id, "name": worker.name}
 
 
-@router.delete("/workers/{worker_id}", status_code=204)
+@router.delete("/workers/{worker_id}", status_code=204, response_model=None)
 def delete_worker(worker_id: int, db: Session = Depends(get_db)) -> None:
     worker = db.get(models.Worker, worker_id)
     if not worker:
@@ -166,6 +223,15 @@ def delete_worker(worker_id: int, db: Session = Depends(get_db)) -> None:
 
 
 # ── Cert endpoints ───────────────────────────────────────────────────────────
+
+@router.get("/certs")
+def list_certs(db: Session = Depends(get_db)) -> list:
+    rows = db.query(models.Cert).order_by(models.Cert.name).all()
+    return [
+        {"id": c.id, "name": c.name, "category": c.category, "validity_years": c.validity_years}
+        for c in rows
+    ]
+
 
 @router.post("/certs", status_code=201)
 def create_cert(body: CertCreate, db: Session = Depends(get_db)) -> dict:
@@ -203,7 +269,7 @@ def update_cert(
     return {"id": cert.id, "name": cert.name}
 
 
-@router.delete("/certs/{cert_id}", status_code=204)
+@router.delete("/certs/{cert_id}", status_code=204, response_model=None)
 def delete_cert(cert_id: int, db: Session = Depends(get_db)) -> None:
     cert = db.get(models.Cert, cert_id)
     if not cert:
@@ -234,7 +300,7 @@ def update_cert_entry(
     }
 
 
-@router.delete("/cert-entries/{entry_id}", status_code=204)
+@router.delete("/cert-entries/{entry_id}", status_code=204, response_model=None)
 def delete_cert_entry(entry_id: int, db: Session = Depends(get_db)) -> None:
     entry = db.get(models.CertEntry, entry_id)
     if not entry:

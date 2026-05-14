@@ -132,6 +132,30 @@ export type ImportBatch = {
   acknowledged_at: string | null
 }
 
+// Lightweight CRUD list types (id-bearing, for mutations)
+export type CrudWorker = {
+  id: number
+  name: string
+  contractor_id: number
+  contractor_name: string
+  job_title: string | null
+  status: string
+}
+
+export type CrudContractor = {
+  id: number
+  name: string
+  specialty: string | null
+  primary_contact: string | null
+}
+
+export type CrudCert = {
+  id: number
+  name: string
+  category: string | null
+  validity_years: number | null
+}
+
 export type ExcelHealth = {
   workbook_path: string
   exists: boolean
